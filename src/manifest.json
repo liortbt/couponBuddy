@@ -26,9 +26,7 @@
                 "<all_urls>"
             ],
             "js": [
-                "./scripts/gglContentScript.js",
-                "./scripts/bngContentScript.js",
-                "./scripts/yhoContentScript.js"
+                "./scripts/gglContentScript.js"
             ]
         }
     ],

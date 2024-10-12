@@ -1,6 +1,6 @@
 // gglContentScript.js
 // In your content script files, e.g., gglContentScript.js
-import { AFFILIATE_LINK } from "../constants.js";
+// import { AFFILIATE_LINK } from "../constants.js";
 
 // This script is injected into search results pages to scrape related searches and display them in the custom popup integrated into the page layout.
 
