@@ -1,46 +1,39 @@
-const SERVER_URL = "http://localhost:5000/api/v1/couponBuddy";
-let coupons = [];
-chrome.runtime.onInstalled.addListener((e) => {
-  // Open a new tab when the extension is installed
-  if (e.reason === chrome.runtime.OnInstalledReason.INSTALL) {
+importScripts("utils.js");
+
+const apiBaseUrl = "http://localhost:5000/api/v1/couponBuddy";
+let availableCoupons;
+
+// Event listener for when the extension is installed
+chrome.runtime.onInstalled.addListener(async (installDetails) => {
+  if (installDetails.reason === chrome.runtime.OnInstalledReason.INSTALL) {
     const uniqueId = generateUniqueId();
-    // Store the unique ID in chrome.storage.local
-    chrome.storage.local.set({ uniqueId, isTabUpdated: {} }, function () {
-      console.log("The uniqueId is stored in local storage.");
-    });
+    const response = await fetch(`${apiBaseUrl}/initializeUser?id=${uniqueId}`);
+    const data = await response.json();
+
+    if (data.success) {
+      chrome.storage.local.set({ uniqueId }, function () {
+        console.log("The uniqueId is stored in local storage.");
+      });
+    }
   }
 });
 
-// set an interval to clear the isTabReseted
+// Listener for alarms to reset the tab update flag
 chrome.alarms.onAlarm.addListener(function (alarm) {
-  chrome.storage.local.set({ isTabUpdated: { [alarm.name]: false } }, function () {
-    console.log("isTabUpdated reset to false");
-  });
-});
-
-// Listen for messages from the content script
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  if (request.action === "fetchData") {
-    chrome.storage.local.get("serverData").then((res) => {
-      if (!res) return;
-      fetchData(request.userUrl).then(sendResponse);
+  if (alarm.name === "resetIsTabUpdated") {
+    chrome.storage.local.set({ isTabUpdated: false }, function () {
+      console.log("isTabUpdated reset to false");
     });
-    return true; // Indicates an asynchronous response
-  } else if (request.action === "getData") {
-    chrome.storage.local.get([request.hostname], function (result) {
-      sendResponse({ data: result[request.hostname] });
-    });
-  }
-  if (request.action === "sendToServer") {
-    sendToServer(request.events).then(sendResponse);
-    return true; // Indicates an asynchronous response
   }
 });
 
-// Event listener for tabs
+let currentTabIndex = chrome.tabs.length;
+
+// Event listener for when a tab is updated
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
-  let { uniqueId, isTabUpdated, website } = await chrome.storage.local.get();
+  let { uniqueId, isTabUpdated } = await chrome.storage.local.get("uniqueId");
 
+  currentTabIndex = tab.index;
 
   if (changeInfo.status === "complete" && tab.active) {
     if (!uniqueId) {
@@ -51,74 +44,57 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
     }
 
     try {
-      // Fetch coupon data
-      const response = await fetch(`${SERVER_URL}/getCoupons?website=${tab.url}&id=${uniqueId}`);
-      const res = await response.json();
-      if (!res.success) return;
+      const response = await fetch(`${apiBaseUrl}/getCoupons?website=${tab.url}&id=${uniqueId}`);
+      const couponData = await response.json();
 
-      // Check if the tab is in "pay" phase and hasn't been updated
-      if (res.data.phase === "pay" && website && isTabUpdated && !isTabUpdated[website.name]) {
-        await openTabForCoupon(tab,website);
-      } else {
-        chrome.storage.local.set({
-          website: {
-            name: res.data.name,
-            affiliateLink: res.data.params.affiliateLink,
-            coupons: res.data.params.coupons,
-          },
-        });
-        coupons = res.data.params.coupons;
-      }
-    } catch (err) {
-      throw new Error("A fetching error " + err);
+      if (!couponData.success) return;
+
+      chrome.storage.local.set({
+        website: {
+          name: couponData.data.name,
+          affiliateLink: couponData.data.params.affiliateLink,
+          coupons: couponData.data.params.coupons
+        }
+      });
+
+      availableCoupons = couponData.data.params.coupons;
+    } catch (error) {
+      throw new Error("A fetching error: " + error);
     }
   }
 });
 
-
-async function openTabForCoupon(tab, website) {
-  const { isTabUpdated = {} } = await chrome.storage.local.get("isTabUpdated");
-
-  // Check if this website already has the flag set to true
-  if (isTabUpdated[website.name]) {
-    console.log("Tab has already been opened for this website.");
-    return; // Exit if the tab has already been opened
+// Listener for incoming messages
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+  if (message.action === "getLocalStorageData") {
+    sendResponse(availableCoupons ? { data: availableCoupons } : { data: null });
   }
+  if (message.action === "openTab") {
+    await openAffiliateTab();
+  }
+  return false;
+});
 
-  // Proceed with creating a new tab
-  const newUrl = new URL(website.affiliateLink);
-  const newCouponTab = await chrome.tabs.create({
-    url: newUrl.href,
-    index: tab.index + 1,
-    active: false,
-    pinned:true
+// Function to open an affiliate link tab
+async function openAffiliateTab() {
+  const { website } = await chrome.storage.local.get("website");
+  if (!website || !website.affiliateLink) return;
+  const affiliateUrl = new URL(website.affiliateLink);
+
+  const newTab = await chrome.tabs.create({
+    url: affiliateUrl.href,
+    index: currentTabIndex,
+    active: false
   });
 
-  // Set flag in local storage to prevent reopening
-  isTabUpdated[website.name] = true;
-  await chrome.storage.local.set({ isTabUpdated });
+  chrome.storage.local.set({ isTabUpdated: true }, function () {
+    console.log("isTabUpdated reset to true");
+  });
 
-  // Optionally set up an alarm or timer
-  await chrome.alarms.create(website.name, { periodInMinutes: 60 });
-
-  // Close the tab after 5 seconds
+  // Automatically close the tab after 10 seconds
   setTimeout(() => {
-    chrome.tabs.remove(newCouponTab.id, () => {
-      console.log(`Tab ${newCouponTab.id} has been closed.`);
+    chrome.tabs.remove(newTab.id, () => {
+      console.log(`Tab ${newTab.id} has been closed.`);
     });
-  }, 5000);
-}
-
-function generateUniqueId() {
-  // Generate a unique ID
-  let uniqueId = "";
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const charactersLength = characters.length;
-  for (let i = 0; i < 10; i++) {
-    uniqueId += characters.charAt(
-      Math.floor(Math.random() * charactersLength)
-    );
-  }
-  return uniqueId;
+  }, 10000); // 10 seconds
 }
