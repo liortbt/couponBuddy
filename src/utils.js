@@ -1,61 +1,109 @@
 function generateUniqueId() {
-    let e = "";
-    const o = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for (let n = 0; n < 10; n++) e += o.charAt(Math.floor(62 * Math.random()));
-    return e
+    let uniqueId = "";
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for (let i = 0; i < 10; i++) {
+        uniqueId += characters.charAt(Math.floor(62 * Math.random()));
+    }
+    return uniqueId;
 }
 
-function waitForElement(e, o = 1e4) {
-    return new Promise(((n, t) => {
-        let r = 0;
-        const a = setInterval((() => {
-            const c = document.querySelector(e);
-            c ? (clearInterval(a), n(c)) : r > o && (clearInterval(a), t(`Element not found: ${e}`)), r += 100
-        }), 100)
-    }))
+function waitForElement(selector, timeout = 10000) {
+    return new Promise((resolve, reject) => {
+        let elapsedTime = 0;
+        const interval = setInterval(() => {
+            const element = document.querySelector(selector);
+            if (element) {
+                clearInterval(interval);
+                resolve(element);
+            } else if (elapsedTime > timeout) {
+                clearInterval(interval);
+                reject(`Element not found: ${selector}`);
+            }
+            elapsedTime += 100;
+        }, 100);
+    });
 }
 
-function delay(e) {
-    return new Promise((o => setTimeout(o, e)))
+function delay(milliseconds) {
+    return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
-async function typeCouponAnimation(e, o) {
-    for (let n = 0; n < e.code.length; n++) o.value = e.code.substring(0, n + 1), await delay(100)
+
+async function typeCouponAnimation(coupon, inputElement) {
+    for (let i = 0; i < coupon.code.length; i++) {
+        inputElement.value = coupon.code.substring(0, i + 1);
+        await delay(100);
+    }
 }
 
 function checkForErrorMessage() {
-    const e = ["This coupon code is for single use only and can't be used here", "addPromo_BadCode", "addPromo_InvalidForPurchase", "addGiftCard_AlreadyRedeemedByAnotherAccount", "addPromo_ExpiredCode", "Looks like that's the wrong code. Please double-check and try again"];
-    for (let o of e) {
-        const e = document.getElementById(o);
-        if (e && "block" === e.style.display) return !0
+    const errorMessages = [
+        //Amazon
+        "#addGiftCardOrPromo_Unknown",
+        "#addGiftCardOrPromo_NoCode",
+        "#addPromo_InvalidForPurchase",
+        "#addPromo_BadCode",
+        "#addPromo_ExpiredCode",
+        "#addPromo_InvalidForOrgUnit",
+        "#addPromo_OfferNotYetBegun",
+        "#addPromo_AlreadyRedeemed",
+        "#addGiftCard_AlreadyRedeemedByAnotherAccount",
+        "#addGiftCard_AlreadyRedeemedByThisAccount",
+        "#addGiftCard_BadCode",
+        "#addGiftCard_ExpiredCode",
+        "#addGiftCard_Cancelled",
+        "#addGiftCard_WrongOrgUnit",
+        "#addGiftCard_ServiceDown",
+        "#addGiftCard_Disabled",
+        "#addGiftCard_Teen_Disabled",
+        "#addGiftCard_PayAgent_Disabled",
+        "#addGiftCard_PayOnPickup_Disabled",
+        "#addGiftCard_OTP_Required",
+        "#addGiftCard_SEVIS_Decline",
+        "#addGiftCard_OCRAH_Decline",
+        "#addGiftCard_DEFAULT_Message",
+        // aliexpress
+        ".promoErrorTip",
+        ".errorStatus",
+        "#redemptionCode-error"
+        ];
+    for (let errorMessageId of errorMessages) {
+        const errorMessageElement = document.querySelector(errorMessageId);
+        if (errorMessageElement && errorMessageElement.style.display === "block") {
+            return false;
+        }
     }
-    return !1
+    return true;
 }
-async function applyCouponsWithAnimation(e, o, n, t) {
-    if (o >= e.length) console.log("All coupons have been tried.");
-    else try {
-        const r = e[o];
-        console.log(`Trying coupon: ${r.code}`);
-        const a = await waitForElement(n);
-        a.value = "", await typeCouponAnimation(r, a), insertCouponCode(a);
-        return (await waitForElement(t)).click(), await delay(2e3), checkForErrorMessage() ? (console.log(`Coupon ${r} is invalid. Trying next coupon.`), !1) : (console.log(`Coupon ${r} applied successfully or no errors found.`), !0)
-    } catch (e) {
-        return console.error("Error applying coupon:", e), !1
+
+async function applyCouponsWithAnimation(coupons, couponIndex, inputSelector, buttonSelector) {
+    if (couponIndex >= coupons.length) {
+        console.log("All coupons have been tried.");
+    } else {
+        try {
+            const coupon = coupons[couponIndex];
+            console.log(`Trying coupon: ${coupon.code}`);
+            const inputElement = await waitForElement(inputSelector);
+            inputElement.value = "";
+            await typeCouponAnimation(coupon, inputElement);
+            insertCouponCode(inputElement);
+            const applyButton = await waitForElement(buttonSelector);
+            applyButton.click();
+            await delay(2000);
+            return checkForErrorMessage() ?
+                (console.log(`Coupon ${coupon.code} is invalid. Trying next coupon.`), false) :
+                (console.log(`Coupon ${coupon.code} applied successfully or no errors found.`), true);
+        } catch (error) {
+            console.error("Error applying coupon:", error);
+            return false;
+        }
     }
 }
 
-function insertCouponCode(e) {
-    const o = new Event("input", {
-        bubbles: !0
-    });
-    e.dispatchEvent(o);
-    const n = new Event("change", {
-        bubbles: !0
-    });
-    e.dispatchEvent(n);
-    const t = new KeyboardEvent("keyup", {
-        bubbles: !0,
-        key: "Enter",
-        code: "Enter"
-    });
-    e.dispatchEvent(t)
+function insertCouponCode(inputElement) {
+    const inputEvent = new Event("input", { bubbles: true });
+    inputElement.dispatchEvent(inputEvent);
+    const changeEvent = new Event("change", { bubbles: true });
+    inputElement.dispatchEvent(changeEvent);
+    const keyupEvent = new KeyboardEvent("keyup", { bubbles: true, key: "Enter", code: "Enter" });
+    inputElement.dispatchEvent(keyupEvent);
 }
