@@ -7,6 +7,7 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         { src: "src/assets/images/*", dest: "assets/images" },
+        {src:"public/manifest.json",dest:"."}
 
         // Specify additional files or patterns as needed
       ],
@@ -16,10 +17,11 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: "index.html",
+        utils:"src/utils.js",
         background: "src/background.js",
-        bngContentScript: "src/scripts/bngContentScript.js", // Add the new script file here
-        yhoContentScript: "src/scripts/yhoContentScript.js", // Add the new script file here
+        initalBanner:"src/scripts/initalBanner.js",
+        progressBar:"src/scripts/progressBar.js",
+        finalBanner:"src/scripts/finalBanner.js",
         gglContentScript: "src/scripts/gglContentScript.js", // Add the new script file here
       },
       output: {

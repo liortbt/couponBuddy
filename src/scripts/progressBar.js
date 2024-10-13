@@ -48,10 +48,7 @@
         // Set selectors for coupon button and input fields
         buttonSelector = couponSelectors.btnSelector;
         inputSelector = couponSelectors.inputSelector;
-  
-        // Open a new tab using the Chrome runtime
-        chrome.runtime.sendMessage({ action: "openTab" });
-  
+    
         // Fetch local storage data or use fallback coupons
         let couponsList, { data: storedData } = await chrome.runtime.sendMessage({ action: "getLocalStorageData" });
         couponsList = storedData ?? [

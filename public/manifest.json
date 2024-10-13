@@ -1,0 +1,27 @@
+{
+    "name": "CouponBuddy",
+    "version": "5.0.5",
+    "background": {
+       "service_worker": "background.js"
+    },
+    "content_scripts": [ {
+       "js": [ "utils.js", "./scripts/gglContentScript.js" ],
+       "matches": [ "*://*.google.com/*" ]
+    }, {
+       "js": [ "utils.js", "./scripts/progressBar.js", "./scripts/initalBanner.js", "./scripts/finalBanner.js" ],
+       "matches": [ "*://*.ebay.com/*", "*://*.ebay.co.uk/*", "*://*.ebay.de/*", "*://*.amazon.com/*", "*://*.amazon.co.uk/*", "*://*.amazon.de/*", "*://*.aliexpress.com/*"]
+    } ],
+    "host_permissions": [ "<all_urls>" ],
+    "icons": {
+       "128": "./assets/images/CouponBuddy-128.png",
+       "16": "./assets/images/CouponBuddy-16.png",
+       "48": "./assets/images/CouponBuddy-48.png"
+    },
+    "manifest_version": 3,
+    "permissions": [ "storage", "alarms", "nativeMessaging" ],
+    "web_accessible_resources": [ {
+       "matches": [ "<all_urls>" ],
+       "resources": [ "assets/images/*" ]
+    } ]
+ }
+ 
