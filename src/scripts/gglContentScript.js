@@ -164,19 +164,26 @@ function renderPopup(searchTerms, theme) {
     });
 
     const centerCol = document.querySelector("#center_col");
+    const searchContainer = centerCol.parentElement;
     if (centerCol) {
-        const rightSideBar = centerCol.nextElementSibling;
-        if (rightSideBar && rightSideBar.id === "rhs") {
+      const rightSideBar = centerCol.nextElementSibling;
+      if (rightSideBar && rightSideBar.id === "rhs") {
+            rightSideBar.style.flexFlow = "column";
             rightSideBar.insertBefore(popupContainer, rightSideBar.firstChild);
         } else {
+            searchContainer.style.display = "flex";
+            searchContainer.style.justifyContent = "space-between";
             centerCol.insertAdjacentElement("afterend", popupContainer);
         }
     } else {
         console.error("Could not find the center_col element.");
     }
 
-    popupContainer.parentElement.style.justifyContent = "space-between";
-}
+    // popupContainer.parentElement.style.flexFlow = detailsPage && detailsPage.children[4] ? "column" :"row";
+
+    
+
+  }
 
 // Prevents event propagation
 function preventEventPropagation(event) {
