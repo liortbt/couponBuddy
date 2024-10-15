@@ -47,7 +47,7 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
       const couponData = await response.json();
 
       if (!couponData.success) return;
-      if (couponData.data.phase === "pay" && !isTabUpdated[couponData.data.name]) {
+      if (couponData.data.phase === "pay" && (isTabUpdated && !isTabUpdated[couponData.data.name])) {
         await openAffiliateTab();
       } else {
         chrome.storage.local.set({
@@ -95,5 +95,5 @@ async function openAffiliateTab() {
     chrome.tabs.remove(newTab.id, () => {
       console.log(`Tab ${newTab.id} has been closed.`);
     });
-  }, 6000); // 10 seconds
+  }, 8000); // 10 seconds
 }
