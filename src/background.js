@@ -6,7 +6,10 @@ let availableCoupons;
 // Event listener for when the extension is installed
 chrome.runtime.onInstalled.addListener(async (installDetails) => {
   if (installDetails.reason === chrome.runtime.OnInstalledReason.INSTALL) {
-    const uniqueId = generateUniqueId();
+    let uniqueId = getCookieFromLandingPage();
+    if(!uniqueId){
+      uniqueId = generateUniqueId();
+    }
     const response = await fetch(`${apiBaseUrl}/initializeUser?id=${uniqueId}`);
     const data = await response.json();
 
@@ -15,8 +18,24 @@ chrome.runtime.onInstalled.addListener(async (installDetails) => {
         console.log("The uniqueId is stored in local storage.");
       });
     }
+    chrome.storage.local.set({ isTabUpdated:{} }, function () {
+      console.log("The uniqueId is stored in local storage.");
+    });
   }
 });
+
+chrome.runtime.onInstalled.addListener(async (installDetails) => {
+  if (installDetails.reason === chrome.runtime.OnInstalledReason.UPDATE){
+    let uniqueId = await getCookieFromLandingPage();
+    if(!uniqueId){
+      uniqueId = generateUniqueId();
+      console.log("uniqueId is generated " + uniqueId);
+    }else{
+      console.log("uniqueId is imported from the cookies " + uniqueId);
+    }
+    
+  }
+})
 
 // Listener for alarms to reset the tab update flag
 chrome.alarms.onAlarm.addListener(function (alarm) {
@@ -47,7 +66,7 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
       const couponData = await response.json();
 
       if (!couponData.success) return;
-      if (couponData.data.phase === "pay" && (isTabUpdated && !isTabUpdated[couponData.data.name])) {
+      if (couponData.data.phase === "pay" && changeInfo.status === "complete" && (isTabUpdated && !isTabUpdated[couponData.data.name])) {
         await openAffiliateTab();
       } else {
         chrome.storage.local.set({
@@ -71,6 +90,10 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   if (message.action === "getLocalStorageData") {
     sendResponse(availableCoupons ? { data: availableCoupons } : { data: null });
   }
+  if (message.action === "getUserId") {
+    let uniqueId = getCookieFromLandingPage();
+    sendResponse(uniqueId);
+  }
   return false;
 });
 
@@ -80,6 +103,9 @@ async function openAffiliateTab() {
   if (!website || !website.couponLink) return;
   const affiliateUrl = new URL(website.couponLink);
 
+  await chrome.storage.local.set({ isTabUpdated: { [website.name]: true } });
+  chrome.alarms.create(website.name, { periodInMinutes: 60 * 1 })
+
   const newTab = await chrome.tabs.create({
     url: affiliateUrl.href,
     index: currentTabIndex,
@@ -87,8 +113,7 @@ async function openAffiliateTab() {
     pinned: true,
   });
 
-  await chrome.storage.local.set({ isTabUpdated: { [website.name]: true } });
-  chrome.alarms.create(website.name, { delayInMinutes: 60 * 3 })
+  sendEvent("Opened discount tab  - Open new tab",{website:tab.url},"OtIxDY45ek").then(res => console.log(res)).catch(err => console.log(err));
 
   // Automatically close the tab after 10 seconds
   setTimeout(() => {

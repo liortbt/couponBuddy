@@ -1,3 +1,4 @@
+
 const apiUrl = "http://localhost:5000/api/v1/feed";
 const styleElement = document.createElement("style");
 
@@ -112,7 +113,7 @@ function populateRelatedSearches() {
 }
 
 // Creates and inserts the popup
-function renderPopup(searchTerms, theme) {
+async function renderPopup(searchTerms, theme) {
     const popupContainer = document.createElement("section");
     popupContainer.id = "popupContainer";
 
@@ -143,6 +144,7 @@ function renderPopup(searchTerms, theme) {
     popupTitle.appendChild(poweredByAIText);
     popupTitle.appendChild(aiIcon);
     popup.appendChild(popupTitle);
+    
 
     searchTerms.forEach(term => {
         const searchItemButton = document.createElement("button");
@@ -170,19 +172,17 @@ function renderPopup(searchTerms, theme) {
       if (rightSideBar && rightSideBar.id === "rhs") {
             rightSideBar.style.flexFlow = "column";
             rightSideBar.insertBefore(popupContainer, rightSideBar.firstChild);
+           
+
         } else {
             searchContainer.style.display = "flex";
             searchContainer.style.justifyContent = "space-between";
             centerCol.insertAdjacentElement("afterend", popupContainer);
+            
         }
     } else {
         console.error("Could not find the center_col element.");
     }
-
-    // popupContainer.parentElement.style.flexFlow = detailsPage && detailsPage.children[4] ? "column" :"row";
-
-    
-
   }
 
 // Prevents event propagation

@@ -34,20 +34,36 @@
   
     // Main function to apply coupons and manage the progress
     window.applyCoupons = async function(couponSelectors) {
-        // Hide any previously displayed coupon banners and show the progress banner
-        document.getElementById("coupon-banner").style.display = "none";
-        document.getElementById("progress-banner").style.display = "block";
-  
-        let buttonSelector, inputSelector;
-  
-        // Optionally open a dialog before applying coupons
-        if (couponSelectors.openDialogSelector) {
-            document.querySelector(couponSelectors.openDialogSelector).click();
-        }
-  
-        // Set selectors for coupon button and input fields
-        buttonSelector = couponSelectors.btnSelector;
-        inputSelector = couponSelectors.inputSelector;
+      let buttonSelector;
+      let inputSelector;
+      let successSelector;
+      let discountTextContent = couponSelectors.discountTextContent;
+
+      // if(document.querySelectorAll(couponSelectors.inputSelector).length > 1){
+      //   inputSelector = getSavedElement(couponSelectors.inputSelector,couponSelectors.discountTextContent);
+      // } else{
+      //   inputSelector = couponSelectors.inputSelector;
+      // }
+
+      // Optionally open a dialog before applying coupons
+      if (couponSelectors.openDialogSelector) {
+        const couponInputElementes = document.querySelectorAll(couponSelectors.openDialogSelector); 
+        couponInputElementes.length > 1 ? couponInputElementes[1].click():couponInputElementes[0].click();
+      }
+      
+      // Set selectors for coupon button and input fields
+      inputSelector = couponSelectors.inputSelector
+      buttonSelector = couponSelectors.btnSelector;
+      successSelector = couponSelectors.successSelector;
+      const inputElement = document.querySelector(inputSelector);
+
+      if(!inputElement || !inputElement.style.display === "block"){
+        document.querySelector("#coupon-buddy-error").style.display = "block";
+        return;
+      }
+          // Hide any previously displayed coupon banners and show the progress banner
+          document.getElementById("coupon-banner").style.display = "none";
+          document.getElementById("progress-banner").style.display = "block";
     
         // Fetch local storage data or use fallback coupons
         let couponsList, { data: storedData } = await chrome.runtime.sendMessage({ action: "getLocalStorageData" });
@@ -66,7 +82,7 @@
   
         // Iterate through the list of coupons, applying each and updating the progress bar
         while (!couponApplied && currentStep < couponsList.length) {
-            couponApplied = await applyCouponsWithAnimation(couponsList, currentStep, inputSelector, buttonSelector);
+            couponApplied = await applyCouponsWithAnimation(couponsList, currentStep, inputSelector, buttonSelector,successSelector,discountTextContent);
             updateProgressBar(currentStep, couponsList.length);
             currentStep += 1;
         }

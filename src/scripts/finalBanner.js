@@ -33,11 +33,15 @@
       document.getElementById("final-banner").style.display = "block";  // Show the final banner
 
       const discountStatus = document.getElementById("discount-status");
+      let message;
       if (couponApplied) {
-          discountStatus.textContent = "Great! You saved money!";  // Success message
-      } else {
-          discountStatus.textContent = "No discounts applied, but we tried our best!";  // Failure message
-      }
+          message = "Great! You saved money!";
+          discountStatus.textContent = message;  // Success message  
+        } else {
+          message = "No discounts applied, but we tried our best!";
+          discountStatus.textContent = message;  // Failure message
+        }
+        sendEvent(`Final banner - show ${message} message`,{website:window.location.href},"OtIxDY45ek").then(res => console.log(res)).catch(err => console.log(err));
   }
 
   // Expose the showFinalBanner function to the global window object

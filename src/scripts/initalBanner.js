@@ -39,6 +39,7 @@
         <button id="apply-coupons-btn" style="
           background-color: ${btnBackground}; color: ${textColor}; border: none; padding: 10px 20px; 
           border-radius: 5px; cursor: pointer; font-size: 14px;">Apply Coupons</button>
+          <span id="coupon-buddy-error" style="display: none; color: red;">Please complete all fields before clicking on the 'Apply Coupons' button</span>
       `;
   
       document.body.appendChild(banner);
@@ -50,6 +51,7 @@
   
       document.getElementById('apply-coupons-btn').addEventListener('click', () => {
         applyCoupons(couponSelectors); // Calls the applyCoupons function
+        sendEvent("Inital Coupons - 'Apply coupon' button clicked",{website:"Aliexpress"},"OtIxDY45ek").then(res => console.log(res)).catch(err => console.log(err));
       });
     }
   
