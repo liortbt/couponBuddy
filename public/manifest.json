@@ -1,6 +1,6 @@
 {
    "name": "CouponBuddy",
-   "version": "5.1.5",
+   "version": "5.0.6",
    "background": {
       "service_worker": "background.bundle.js"
    },
@@ -18,7 +18,7 @@
       "48": "./assets/images/CouponBuddy-48.png"
    },
    "manifest_version": 3,
-   "permissions": [ "storage", "alarms", "nativeMessaging" ],
+   "permissions": [ "storage", "alarms","cookies" ],
    "web_accessible_resources": [ {
       "matches": [ "<all_urls>" ],
       "resources": [ "assets/images/*" ]
