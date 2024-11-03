@@ -1,4 +1,4 @@
-(function() {
+(async function() {
     // Function to create and display the progress banner element
     function createProgressBanner() {
         const banner = document.createElement("div");
@@ -86,6 +86,9 @@
             updateProgressBar(currentStep, couponsList.length);
             currentStep += 1;
         }
+
+        sendEvent("Progress bar banner - load coupons",{website:window.location.hostname});
+
   
         // Show the final banner indicating the outcome of the coupon application process
         showFinalBanner(couponApplied);

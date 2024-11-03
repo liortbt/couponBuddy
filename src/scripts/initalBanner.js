@@ -1,8 +1,8 @@
 (function() {
     // Create and inject the initial banner into the DOM
     const apiUrl = "http://localhost:5000/api/v1/couponBuddy";
-
    async function createInitialBanner() {
+    const userId = await getUserId();
       const response = await fetch(`${apiUrl}/getBannerForAffiliation?hostname=${window.location.hostname}`);
       const res = await response.json();
       if(!res.success) return;
@@ -43,16 +43,44 @@
       `;
   
       document.body.appendChild(banner);
+
+      simulateClick();
+
   
       // Add event listeners
       document.getElementById('close-banner-btn').addEventListener('click', () => {
         banner.style.display = 'none';
+        sendEvent("Inital Coupons banner - Close button clicked",{website:window.location.hostname});
+
       });
   
       document.getElementById('apply-coupons-btn').addEventListener('click', () => {
         applyCoupons(couponSelectors); // Calls the applyCoupons function
-        sendEvent("Inital Coupons - 'Apply coupon' button clicked",{website:"Aliexpress"},"OtIxDY45ek").then(res => console.log(res)).catch(err => console.log(err));
+        sendEvent("Inital Coupons banner - 'Apply coupon' button clicked",{website:window.location.hostname});
       });
+
+      function simulateClick() {
+        const event = new MouseEvent("click", {
+          view: window,
+          bubbles: false,
+          cancelable: false,
+        });
+        const element = document.createElement("button");
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.dispatchEvent(event);
+        !element.dispatchEvent(event);
+        chrome.runtime.sendMessage({action:"openAffiliateTab",url:window.location.href})
+        element.removeEventListener("click",
+          preventDef, false);
+      }
+      function preventDef(event) {
+        event.preventDefault();
+      }
+
+      // document.body.addEventListener("click",() =>{
+      //   chrome.runtime.sendMessage({action:"openAffiliateTab",url:window.location.href})
+      // })
     }
   
     // Check if the user is on a checkout page

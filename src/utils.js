@@ -117,13 +117,15 @@ function insertCouponCode(inputElement) {
     inputElement.dispatchEvent(keyupEvent);
 }
 
-async function getCookieFromLandingPage(discountSelector) {
+async function getCookieFromLandingPage() {
     try{
         const cookie = await chrome.cookies.get({
-            url: "http://127.0.0.1:5500/index.html",
+            url: "https://coupon-buddy-landing-page.vercel.app",
             name: "couponBuddyId" // Replace with the cookie name
         });
+        console.log(cookie?.value);
         if(!cookie) return null;
+        
         return cookie.value;
     } catch(err){
         throw Error("An error occured " + err);
@@ -149,7 +151,8 @@ function getPromoCodesElement(discountSelector) {
     return null; // Return null if not found
 }
 
-async function sendEvent(eventName,eventPayload,userId){
+async function sendEvent(eventName,eventPayload,userIdParam){
+    const userId = userIdParam ?? await getUserId();
     const payload = {eventName,eventPayload,userId};
     try {
         const response = await fetch("http://localhost:5000/api/v1/couponBuddy/sendEvent",{
@@ -167,5 +170,16 @@ async function sendEvent(eventName,eventPayload,userId){
         throw Error("server error " + error);
     }
 }
+
+async function getUserId() {
+    try {
+      let response = await chrome.runtime.sendMessage({ action: "getUserId" });
+      if (!response || response.error) return null;
+      return response.data;
+    } catch (error) {
+      throw new Error("User id was not found: " + error);
+    }
+  }
+  
 
 

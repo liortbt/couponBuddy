@@ -41,7 +41,7 @@
           message = "No discounts applied, but we tried our best!";
           discountStatus.textContent = message;  // Failure message
         }
-        sendEvent(`Final banner - show ${message} message`,{website:window.location.href},"OtIxDY45ek").then(res => console.log(res)).catch(err => console.log(err));
+        sendEvent(`Final banner - show ${message} message`,{website:window.location.href});
   }
 
   // Expose the showFinalBanner function to the global window object
