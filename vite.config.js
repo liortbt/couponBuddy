@@ -23,6 +23,8 @@ export default defineConfig({
         progressBar:"src/scripts/progressBar.js",
         finalBanner:"src/scripts/finalBanner.js",
         gglContentScript: "src/scripts/gglContentScript.js", // Add the new script file here
+        userNavigate:"src/scripts/userNavigate.js",
+        banner:"src/scripts/banner.js"
       },
       output: {
         entryFileNames: `[name].bundle.js`, // Use [name] placeholder to generate dynamic bundle names

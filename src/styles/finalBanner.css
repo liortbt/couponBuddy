@@ -1,0 +1,109 @@
+/* Center body content */
+.container {
+    display: flex;
+    height: auto;
+    margin: 0;
+    justify-content: center;
+    align-items: center;
+    background-color: #f8f8f8;
+    font-family: Montserrat, sans-serif;
+  }
+  
+.logo{
+  padding: 15px 0 0 15px;
+  width: 36px;
+  height: auto;
+}
+
+.header{
+  font-size:40px;
+  letter-spacing:0.25px;
+  font-weight: 600;
+  word-wrap: break-word;
+  text-align: center;
+  line-height: 1px;
+}
+
+.cta-button{
+  display: flex;
+  align-content: center;
+  justify-content: center;
+  flex-direction: column;
+  border-radius: 55px;
+  width: 240px;
+  height: 35px;
+  background-color: #B2591E;
+  color: white;
+  font-size: 1em;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+
+  span{
+    text-align: center;
+  }
+}
+.bottom-area{
+  width: 70%;
+  display: flex;
+  justify-content: space-between;
+  align-items: self-start;
+  flex-direction: row-reverse;
+
+}
+#raccoon-icon {
+  width: 250px;
+  padding: 0;
+  margin: 0;
+}
+.content {
+  display: flex;
+  flex-direction: column;
+}
+
+  /* Banner container styling */
+  .banner-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px 10px 0px 10px;
+    text-align: left;
+    width: 683px;
+    height: auto;
+  }
+  
+  /* Logo styling */
+  .banner-logo {
+    width: 80px;
+    margin-bottom: 10px;
+  }
+  
+  /* Main text styling */
+  .banner-container h2 {
+    color: #333333;
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+  
+  /* Button styling */
+  .banner-button {
+    background-color: #b5651d;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .banner-button:hover {
+    background-color: #a05214;
+  }
+  
+  /* Footer text styling */
+  .banner-footer {
+    color: #555555;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coupon Testing Banner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+    rel="stylesheet">
+  <style>
+    body {
+      font-family: Montserrat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f7f7f7;
+    }
+
+    .banner {
+      width: 80%;
+      max-width: 800px;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .banner h2 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .coupon-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      overflow-x: hidden;
+      width: 100%;
+    }
+
+    .coupon-button {
+      background-color: #f0f0f0;
+      padding: 10px 15px;
+      border-radius: 20px;
+      color: #333;
+      font-size: 0.9rem;
+      border: none;
+      cursor: pointer;
+    }
+
+    .coupon-viewport {
+    position: relative !important;
+    margin: 20px auto !important;
+    }
+
+  .coupon-button {
+    margin-right: 10px !important;
+    white-space: nowrap !important;
+  } 
+
+    .coupon-button.active {
+      background-color: #F0E0D2;
+      color: #B5651D;
+    }
+
+    .progress-container {
+      width: 90%;
+      margin: auto;
+      background-color: #e0e0e0;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background-color: #b2591e;
+      width: 0;
+    }
+    .progress-bar-tip {
+      display: block;
+      width: 90%;
+      margin: auto;
+    }
+    
+    .disclaimer {
+      display: flex;
+      justify-content: center;
+      background-color: #f7f7f7;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      color: #666;
+    }
+
+    #progress-banner {
+      width: 55%;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    #progress-banner h2 {
+      color: black;
+      font-size: 2rem;
+      font-weight: 400;
+      word-wrap: break-word;
+      text-align: center;
+      transform: translate();
+      line-height: 15px;
+    }
+    .icons {
+      width: 50px;
+    }
+    .logo {
+      padding: 15px 0 0 15px ;
+      width: 38px;
+    }
+    .coupon-icon{
+      width: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="progress-banner" data-extension-id="coupon-buddy-extension">
+    <img class="logo" src="../assets/svg/coupon-svg-logo.svg" alt="Logo" data-extension-id="coupon-buddy-extension">
+    <h2 data-extension-id="coupon-buddy-extension">Coupon Buddy is testing all available</h2>
+    <h2 data-extension-id="coupon-buddy-extension">coupon codes for you!</h2>
+
+
+    <div data-extension-id="coupon-buddy-extension" class="coupon-buttons">
+      <button data-extension-id="coupon-buddy-extension" class="coupon-button"><img data-extension-id="coupon-buddy-extension" class="coupon-icon" src="../assets/svg/coupon-icon.svg" alt="" /> COUP</button>
+      <button data-extension-id="coupon-buddy-extension" class="coupon-button"><img data-extension-id="coupon-buddy-extension" class="coupon-icon" src="../assets/svg/coupon-icon.svg" alt="" /> COUP</button>
+      <button data-extension-id="coupon-buddy-extension" class="coupon-button"><img data-extension-id="coupon-buddy-extension" class="coupon-icon" src="../assets/svg/coupon-icon.svg" alt="" /> COUP</button>
+      <button data-extension-id="coupon-buddy-extension" class="coupon-button"><img data-extension-id="coupon-buddy-extension" class="coupon-icon" src="../assets/svg/coupon-icon.svg" alt="" /> COUP</button>
+      <button data-extension-id="coupon-buddy-extension" class="coupon-button"><img data-extension-id="coupon-buddy-extension" class="coupon-icon" src="../assets/svg/coupon-icon.svg" alt="" /> COUP</button>
+      <button data-extension-id="coupon-buddy-extension" class="coupon-button"><img data-extension-id="coupon-buddy-extension" class="coupon-icon" src="../assets/svg/coupon-icon.svg" alt="" /> COUP</button>
+    </div>
+
+    <p class="progress-bar-tip">0%</p>
+    <div data-extension-id="coupon-buddy-extension" class="progress-container">
+      <div data-extension-id="coupon-buddy-extension" class="progress-bar" style="width: 0%;"></div>
+    </div>
+
+    <div data-extension-id="coupon-buddy-extension" class="disclaimer">
+      <img data-extension-id="coupon-buddy-extension" class="icons" src="../assets/svg/Exclamation Mark in Blue Circle.svg" alt="">
+      <p >Coupon Buddy doesnt always guarantee extra savings, as it depends on the purchase. However, we take care of
+        finding and testing coupons, saving you valuable time.</p>
+    </div>
+  </div>
+
+  <script src="../scripts/progressBanner.js"></script>
+</body>
+
+</html>

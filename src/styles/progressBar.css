@@ -1,0 +1,33 @@
+:root {
+    color: #100F0D;
+    font-family: Inter;
+    font-size: 10px;
+    font-style: normal;
+    line-height: normal;
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
+}
+ul {
+    list-style-type:none;
+}
+img{
+    width: 1.5rem;
+}
+body {
+    width: 100vw;
+    height: 100vh;
+    background-color: white;
+    display: flex;
+    flex-flow: column wrap;
+    margin: auto;
+}
+.container {
+    width: 48rem;
+    height: 30rem;
+    background-color: white;
+    display: flex;
+    flex-flow: column wrap;
+    justify-content: space-between;
+    margin: auto;
+}

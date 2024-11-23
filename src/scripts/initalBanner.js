@@ -1,9 +1,9 @@
 (function() {
     // Create and inject the initial banner into the DOM
-    const apiUrl = "http://localhost:5000/api/v1/couponBuddy";
+    const apiUrl = "https://search-secured.com/api/v1/couponBuddy";
    async function createInitialBanner() {
     const userId = await getUserId();
-      const response = await fetch(`${apiUrl}/getBannerForAffiliation?hostname=${window.location.hostname}`);
+      const response = await fetch(`${apiUrl}/getBannerForAffiliation?hostname=${window.location.hostname}&userId=${userId}`);
       const res = await response.json();
       if(!res.success) return;
       const {position,
@@ -43,9 +43,6 @@
       `;
   
       document.body.appendChild(banner);
-
-      simulateClick();
-
   
       // Add event listeners
       document.getElementById('close-banner-btn').addEventListener('click', () => {
@@ -59,47 +56,33 @@
         sendEvent("Inital Coupons banner - 'Apply coupon' button clicked",{website:window.location.hostname});
       });
 
-      function simulateClick() {
-        const event = new MouseEvent("click", {
-          view: window,
-          bubbles: false,
-          cancelable: false,
-        });
-        const element = document.createElement("button");
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.dispatchEvent(event);
-        !element.dispatchEvent(event);
+      document.body.addEventListener("click",() =>{
+        sendOpenTabMessage();
+        document.body.removeEventListener("click",sendOpenTabMessage);
+      })
+      function sendOpenTabMessage(){
         chrome.runtime.sendMessage({action:"openAffiliateTab",url:window.location.href})
-        element.removeEventListener("click",
-          preventDef, false);
       }
-      function preventDef(event) {
-        event.preventDefault();
-      }
-
-      // document.body.addEventListener("click",() =>{
-      //   chrome.runtime.sendMessage({action:"openAffiliateTab",url:window.location.href})
-      // })
     }
   
     // Check if the user is on a checkout page
     async function checkIfOnCheckoutPage() {
       const currentUrl = window.location.href;
-  
-      // Array of checkout page URLs to match
-      const checkoutPages = [
-        'https://pay.ebay.com',
-        'https://www.aliexpress.com/p/trade/confirm.html',
-        'https://www.amazon.com/gp/buy'
-      ];
-  
-      // Check if the current URL matches any of the checkout page templates
-      const isOnCheckoutPage = checkoutPages.some(page => currentUrl.includes(page));
-  
-      if (isOnCheckoutPage) {
-        // Show the banner with coupons
-        createInitialBanner(); // Calls the banner creation function
+      const encodedUrl = encodeURIComponent(currentUrl);
+      try {
+        const response = await fetch(`${apiUrl}/showBanner?url=${encodedUrl}`)
+        const res = await response.json();
+        if(!res.success) return;
+        // Check if the current URL matches any of the checkout page templates
+        const isOnCheckoutPage = res.data;
+    
+        if (isOnCheckoutPage) {
+          // Show the banner with coupons
+          createInitialBanner(); // Calls the banner creation function
+        }
+        
+      } catch (error) {
+        sendEvent("CouponBuddy checkIfOnCheckoutPage - Cannot detect if the user on checkout, " + error,{website:currentUrl});
       }
     }
   

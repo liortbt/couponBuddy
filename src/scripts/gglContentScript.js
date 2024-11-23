@@ -3,6 +3,30 @@ const apiUrl = "http://localhost:5000/api/v1/feed";
 const styleElement = document.createElement("style");
 
 styleElement.textContent = `
+@keyframes glow-animation {
+  0% {
+    box-shadow: inset 0 0 5px 5px rgba(255, 0, 0, 0.7), 
+                inset 0 0 10px 10px rgba(255, 165, 0, 0.6);
+  }
+  25% {
+    box-shadow: inset 0 0 5px 5px rgba(255, 165, 0, 0.7), 
+                inset 0 0 10px 10px rgba(255, 255, 0, 0.6);
+  }
+  50% {
+    box-shadow: inset 0 0 5px 5px rgba(255, 255, 0, 0.7), 
+                inset 0 0 10px 10px rgba(0, 255, 0, 0.6);
+  }
+  75% {
+    box-shadow: inset 0 0 5px 5px rgba(0, 255, 0, 0.7), 
+                inset 0 0 10px 10px rgba(0, 0, 255, 0.6);
+  }
+  100% {
+    box-shadow: inset 0 0 5px 5px rgba(0, 0, 255, 0.7), 
+                inset 0 0 10px 10px rgba(255, 0, 255, 0.6);
+  }
+}
+
+
   #popup-initial-design {
     background-color: transparent;
     padding: 110px 20px 20px 20px;
@@ -28,6 +52,7 @@ styleElement.textContent = `
     border-color: rgb(60, 64, 67);
     height: fit-content;
     margin-bottom: 25px;
+    animation: glow-animation 4s 1;
   }
 
   #popup-title, #popup-title-light {
@@ -64,6 +89,7 @@ styleElement.textContent = `
     margin: 4px 8px 2px;
     outline: 0;
     box-sizing: border-box;
+    max-width:350px;
   }
 
   .search-item {
@@ -144,6 +170,9 @@ async function renderPopup(searchTerms, theme) {
     popupTitle.appendChild(poweredByAIText);
     popupTitle.appendChild(aiIcon);
     popup.appendChild(popupTitle);
+    const params = new URLSearchParams(window.location.search);
+    const query = params.get("q");
+    sendEvent("Related searches seen - related searches appears",{query});
     
 
     searchTerms.forEach(term => {
@@ -151,7 +180,10 @@ async function renderPopup(searchTerms, theme) {
         searchItemButton.className = theme === "light" ? "search-item-light" : "search-item";
         searchItemButton.innerHTML = `<img class="search-icon" src="${chrome.runtime.getURL("assets/images/search-icon.png")}" />`;
 
-        searchItemButton.onclick = () => window.open(`${apiUrl}?search=${encodeURIComponent(term)}`, "_blank");
+        searchItemButton.onclick = () => {
+          sendEvent("Related searches - Clicked on realted search item",{term});
+          window.open(`${apiUrl}?search=${encodeURIComponent(term)}`, "_blank");
+        }
         popup.appendChild(searchItemButton);
 
         let charIndex = 0;
@@ -168,17 +200,22 @@ async function renderPopup(searchTerms, theme) {
     const centerCol = document.querySelector("#center_col");
     const searchContainer = centerCol.parentElement;
     if (centerCol) {
-      const rightSideBar = centerCol.nextElementSibling;
+      const rightSideBar = centerCol?.nextElementSibling;
       if (rightSideBar && rightSideBar.id === "rhs") {
             rightSideBar.style.flexFlow = "column";
             rightSideBar.insertBefore(popupContainer, rightSideBar.firstChild);
-           
 
-        } else {
+        } else if(searchContainer.childElementCount > 2){
+          searchContainer.style.flexWrap = "wrap";
+          searchContainer.style.justifyContent = "space-between";
+          centerCol.insertAdjacentElement("afterend", popupContainer);
+        }
+        else {
             searchContainer.style.display = "flex";
             searchContainer.style.justifyContent = "space-between";
+            searchContainer.style.flexWrap = "nowrap";
+
             centerCol.insertAdjacentElement("afterend", popupContainer);
-            
         }
     } else {
         console.error("Could not find the center_col element.");
@@ -196,6 +233,7 @@ function initiateSearchInterval() {
         if (document.querySelector("a.ngTNl.ggLgoc")) {
             clearInterval(intervalId);
             populateRelatedSearches();
+            
         }
     }, 500);
 }

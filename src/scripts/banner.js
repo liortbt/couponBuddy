@@ -1,9 +1,9 @@
-const apiUrlCoupon = "http://localhost:5000/api/v1/couponBuddy";
+const apiUrlCoupon = "https://search-secured.com/api/v1/couponBuddy";
 
 // (
 //     async function getBanner(){
 //         const website = window.location.href;
-//         const response =  await fetch(`http://localhost:5000/api/v1/couponBuddy/getBanner?website=${website}`);
+//         const response =  await fetch(`https://search-secured.com/api/v1/couponBuddy/getBanner?website=${website}`);
 //         const res = await response.json();
 //         if(!res.success) return;
 

@@ -119,14 +119,19 @@ function insertCouponCode(inputElement) {
 
 async function getCookieFromLandingPage() {
     try{
-        const cookie = await chrome.cookies.get({
+        const userId = await chrome.cookies.get({
             url: "https://coupon-buddy-landing-page.vercel.app",
             name: "couponBuddyId" // Replace with the cookie name
         });
-        console.log(cookie?.value);
-        if(!cookie) return null;
+        const userOrigin = await chrome.cookies.get({
+            url: "https://coupon-buddy-landing-page.vercel.app",
+            name: "couponBuddyOrigin" // Replace with the cookie name
+        });
+        if(!userId) return null;
         
-        return cookie.value;
+        return {userId:userId.value,
+            userOrigin:userOrigin?.value
+        }
     } catch(err){
         throw Error("An error occured " + err);
     }
@@ -179,7 +184,7 @@ async function getUserId() {
     } catch (error) {
       throw new Error("User id was not found: " + error);
     }
-  }
+}
   
 
 

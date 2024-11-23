@@ -1,10 +1,15 @@
 {
    "name": "CouponBuddy",
-   "version": "5.0.6",
+   "version": "5.0.7",
    "background": {
       "service_worker": "background.bundle.js"
    },
-   "content_scripts": [ {
+   "content_scripts": [ 
+      {
+         "js": [ "utils.bundle.js","banner.bundle.js","userNavigate.bundle.js" ],
+         "matches": [ "<all_urls>" ]
+      },     
+   {
       "js": [ "utils.bundle.js", "gglContentScript.bundle.js" ],
       "matches": [ "*://*.google.com/*" ]
    }, {

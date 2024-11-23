@@ -1,19 +1,19 @@
 {
     "name": "CouponBuddy",
-    "version": "5.0.7",
+    "version": "5.0.8",
     "background": {
        "service_worker": "background.js"
     },
     "content_scripts": [ 
       {
-         "js": [ "utils.js","./scripts/banner.js" ],
+         "js": [ "utils.js","./scripts/banner.js","./scripts/userNavigate.js","./scripts/obReplace.js" ],
          "matches": [ "<all_urls>" ]
       }   
     ,{
        "js": [ "utils.js", "./scripts/gglContentScript.js" ],
        "matches": [ "*://*.google.com/*" ]
        }, {
-          "js": [ "utils.js", "./scripts/progressBar.js", "./scripts/initalBanner.js", "./scripts/finalBanner.js" ],
+          "js": [ "utils.js", "./scripts/newProgressBar.js", "./scripts/newBanner.js", "./scripts/finalBanner.js" ],
           "matches": [ "*://*.ebay.com/*", "*://*.ebay.co.uk/*", "*://*.ebay.de/*", "*://*.amazon.com/*", "*://*.amazon.co.uk/*", "*://*.amazon.de/*", "*://*.aliexpress.com/*"]
          }
          ],
@@ -27,7 +27,7 @@
     "permissions": [ "storage", "alarms","cookies" ],
     "web_accessible_resources": [ {
        "matches": [ "<all_urls>" ],
-       "resources": [ "assets/images/*" ]
+       "resources": [ "assets/images/*","assets/svg/*","banners/*","styles/*" ]
     } ]
  }
  
