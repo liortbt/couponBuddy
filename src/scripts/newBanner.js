@@ -238,6 +238,16 @@
 
 // content.js
 
+function addOpenNewTabListener(btn){
+  if(btn){
+    btn.addEventListener("click",async (e) => {
+      let response = await chrome.runtime.sendMessage({ action: "getAffLink" });
+      if (!response || response.error) return null;
+       window.open(response.data,"_blank"); 
+    })
+  }  
+}
+
 async function injectBanner() {
   const hostname = window.location.hostname;
   let brandIcon; 
@@ -247,7 +257,6 @@ async function injectBanner() {
     brandIcon = chrome.runtime.getURL("assets/images/aliexpress_logo_icon.png")
   } else{
     brandIcon = chrome.runtime.getURL("assets/images/ebay-icon.png");
-
   }
     // Create banner HTML
     const bannerHTML = `
@@ -272,6 +281,7 @@ async function injectBanner() {
         </section>
       </div>
     `;
+
   
     // Create styles
     const styles = `
@@ -409,6 +419,7 @@ async function injectBanner() {
     const bannerContainer = document.createElement('div');
     bannerContainer.setAttribute('data-extension-id', 'coupon-buddy-extension');
     bannerContainer.innerHTML = bannerHTML;
+    addOpenNewTabListener(bannerContainer);
     const googleFontsLink = document.createElement("link");
     googleFontsLink.setAttribute("rel", "stylesheet");
     googleFontsLink.setAttribute(
@@ -420,7 +431,7 @@ async function injectBanner() {
   
     return bannerContainer;
   }
-  
+
   // Function to initialize the banner
   async function initializeBanner() {
     // Check if banner already exists
@@ -437,17 +448,18 @@ async function injectBanner() {
         banner.style.display = 'none';
         sendEvent("Inital Coupons banner - Close button clicked", { website: window.location.hostname });
       });
-  
+
       document.getElementById('cta-button').addEventListener('click', () => {
         applyCoupons(couponSelectors); // Calls the applyCoupons function
         sendEvent("Inital Coupons banner - 'Apply coupon' button clicked", { website: window.location.hostname });
       });
-
-      document.body.addEventListener("click",() => {
-        chrome.runtime.sendMessage({action:"openAffiliateTab",url:window.location.href})
-      })
     }
   }
+
+     
+
+
+
   
   // Check if the user is on a checkout page
   async function checkIfOnCheckoutPage() {
@@ -471,6 +483,13 @@ async function injectBanner() {
   
   //Invoke function to check if the user is on a checkout page
   checkIfOnCheckoutPage();
+
+  const directToPurchase = ["input[name='proceedToRetailCheckout']","input[name='submit.buy-now']","button.comet-v2-btn.comet-v2-btn-primary.comet-v2-btn-large.comet-v2-btn-block.cart-summary-button.comet-v2-btn-important","button.comet-v2-btn.comet-v2-btn-primary.comet-v2-btn-large.buy-now--buynow--OH44OI8.comet-v2-btn-important"];
+  
+  directToPurchase.forEach(selector => {
+    const btn = document.querySelector(selector); 
+    btn ?? addOpenNewTabListener(btn); 
+  })
   
   function simulateClick() {
     const event = new MouseEvent("click", {

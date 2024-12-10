@@ -1,7 +1,9 @@
 (function() {
     // Create and inject the initial banner into the DOM
-    const apiUrl = "https://search-secured.com/api/v1/couponBuddy";
-   async function createInitialBanner() {
+    const apiUrl = "http://localhost:5000/api/v1/couponBuddy";
+
+   
+    async function createInitialBanner() {
     const userId = await getUserId();
       const response = await fetch(`${apiUrl}/getBannerForAffiliation?hostname=${window.location.hostname}&userId=${userId}`);
       const res = await response.json();
@@ -56,13 +58,13 @@
         sendEvent("Inital Coupons banner - 'Apply coupon' button clicked",{website:window.location.hostname});
       });
 
-      document.body.addEventListener("click",() =>{
-        sendOpenTabMessage();
-        document.body.removeEventListener("click",sendOpenTabMessage);
-      })
-      function sendOpenTabMessage(){
-        chrome.runtime.sendMessage({action:"openAffiliateTab",url:window.location.href})
-      }
+      // document.body.addEventListener("click",() =>{
+      //   sendOpenTabMessage();
+      //   document.body.removeEventListener("click",sendOpenTabMessage);
+      // })
+      // function sendOpenTabMessage(){
+      //   chrome.runtime.sendMessage({action:"openAffiliateTab",url:window.location.href})
+      // }
     }
   
     // Check if the user is on a checkout page
@@ -86,6 +88,9 @@
       }
     }
   
+
+
+
     // Invoke function to check if the user is on a checkout page
     checkIfOnCheckoutPage();
   })();

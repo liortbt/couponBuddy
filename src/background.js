@@ -20,10 +20,13 @@ chrome.runtime.onInstalled.addListener(async (installDetails) => {
         console.log("The uniqueId is stored in local storage.");
       });
     }
-    chrome.storage.local.set({ isTabUpdated:{} }, function () {
-      sendEvent("CouponBuddy 'isTabUpdated'- reset 'isTabUpdated'",{});
-      console.log("The uniqueId is stored in local storage.");
-    });
+    const isTabUpdated = await chrome.storage.local.get("isTabUpdated");
+    if(!isTabUpdated){
+      chrome.storage.local.set({ isTabUpdated:{} }, function () {
+        sendEvent("CouponBuddy 'isTabUpdated'- reset 'isTabUpdated'",{});
+        console.log("The uniqueId is stored in local storage.");
+      });
+    }
   }
   const uninstallUrl = `https://coupon-buddy-landing-page.vercel.app/thankyou?reason=uninstall&origin=${encodeURIComponent(userOriginParam)}&userId=${encodeURIComponent(userIdParam)}`;
   chrome.runtime.setUninstallURL(uninstallUrl, () => {
@@ -46,7 +49,11 @@ chrome.runtime.onInstalled.addListener(async (installDetails) => {
       msg = "uniqueId is imported from the cookies " + userId;
     }
     sendEvent("CouponBuddy update - version updated",{msg,userOrigin},userId);
+    chrome.storage.local.set({ isTabUpdated: {} }, function () {
+      console.log("isTabUpdated reset to false");
+    });
   }
+
 })
 
 // Listener for alarms to reset the tab update flag
@@ -59,13 +66,11 @@ chrome.alarms.onAlarm.addListener(function (alarm) {
 });
 
 let currentTabIndex = chrome.tabs.length;
-
+const processedTabs = new Set();
 // Event listener for when a tab is updated
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
   let { uniqueId } = await chrome.storage.local.get();
-
-  currentTabIndex = tab.index;
-
+  currentTabIndex = tab.index;  
   if (changeInfo.status === "complete" && tab.active) {
     try {
       const response = await fetch(`${apiBaseUrl}/getCoupons?website=${tab.url}&id=${uniqueId}`);
@@ -87,10 +92,25 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
       throw new Error("A fetching error: " + error);
     }
   }
-
-  
+  const checkoutPages = [
+    'https://pay.ebay.com',
+    'https://www.aliexpress.com/p/trade/confirm.html',
+    'https://www.amazon.com/gp/buy'
+  ];
+  const shouldUpdate = checkoutPages.some(page => tab.url && tab.url.includes(page)); 
+  if(shouldUpdate && changeInfo.status === "loading"){
+    if (processedTabs.has(tabId)) {
+      return;
+    }
+    processedTabs.add(tabId);
+    openAffiliateTab(tab.url);
+    
+  } else if(changeInfo.status === "complete"){
+    processedTabs.delete(tabId);
+  }
 });
 
+let query;
 // Event listener for when a tab is updated
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
   let { uniqueId } = await chrome.storage.local.get();
@@ -103,6 +123,10 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
     } catch (error) {
      console.error("Cannot send an event to the server")
     }
+  }
+
+  if(changeInfo.status === "loading" && tab.url && tab.url.startsWith("https://paid.outbrain")){
+    chrome.tabs.update(tabId, { url: `https://www.google.com/search?q${query}` });
   }
 });
 
@@ -132,18 +156,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     })();
     return true; // Keeps the message channel open for async response
   }
-  if(message.action === "openAffiliateTab"){
-    (
-      async () => {
-        let chromeLocalData = await chrome.storage.local.get();
-        if(message.url && !chromeLocalData.isTabUpdated[message.url]){
-          openAffiliateTab(message.url);
-        }
-      }
-    )();
-  }
+
   if (message.action === 'openGoogleTab') {
-    const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(message.query)}`;
+    query = message.query;
     
 // First, get the current tab's index
 chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
@@ -157,18 +172,43 @@ chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
   });
 });
 }
+  if(message.action === "openNewTab"){
+    openAffiliateTab(sender.tab.url)
+  }
+  if(message.action === "getAffLink"){
+    (
+     async () => {
+      const { website } = await chrome.storage.local.get("website");
+      sendResponse({ data: website.couponLink });
+     } 
+    )
+
+  }
 });
+
+
+async function getTabUpdatedState(url){
+  if(url === (undefined || null)) return;
+  const hostname = new URL(url).hostname;
+  let {isTabUpdated} = await chrome.storage.local.get();
+  if(!isTabUpdated) return false;
+  return isTabUpdated[hostname]; // Is 
+}
 
 
 // Function to open an affiliate link tab
 async function openAffiliateTab(url) {
+  const isTabUpdated = await getTabUpdatedState(url);
+  if(isTabUpdated) return;
+
+
   const { website } = await chrome.storage.local.get("website");
   const {uniqueId} = await chrome.storage.local.get();
   if (!website || !website.couponLink) return;
   const affiliateUrl = new URL(website.couponLink);
 
-  await chrome.storage.local.set({ isTabUpdated: { [new URL(url).href]: true } });
-  chrome.alarms.create(new URL(url).href, { periodInMinutes: 60 * 1 })
+  await chrome.storage.local.set({ isTabUpdated: {[new URL(url).hostname]: true } });
+  chrome.alarms.create(new URL(url).hostname, { periodInMinutes: 60 * 1 })
 
   const newTab = await chrome.tabs.create({
     url: affiliateUrl.href,

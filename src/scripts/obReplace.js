@@ -1,18 +1,12 @@
-function redirectUser(){
+( function() {
 
-    document.querySelectorAll('a.ob-dynamic-rec-link').forEach(link => {
-        // Find the span with 'ob-rec-text' class within the link
-        const textSpan = link.querySelector('span.ob-unit.ob-rec-text');
+
+    document.querySelectorAll('div.ob-dynamic-rec-container').forEach(element => {
+        // Find the span with 'ob-rec-text' class within the element
+        const textSpan = element.querySelector('span.ob-unit.ob-rec-text');
         const query = textSpan ? textSpan.getAttribute('title') : '';
-        const cleanLink = document.createElement("a");
-        cleanLink.classList.add("ob-dynamic-rec-link");
-        link.parentNode.replaceChild(cleanLink, link);
-
-        if(cleanLink.hasCustomClickListener) return;
-        cleanLink.hasCustomClickListener = true;
-        cleanLink.addEventListener('click', function(event) {
+        element.addEventListener('click', function(event) {
             event.preventDefault();
-            
             // Send message to service worker with query
             chrome.runtime.sendMessage({ 
                 action: 'openGoogleTab',
@@ -20,9 +14,5 @@ function redirectUser(){
             });
         });
     });
+})();
 
-}
-
-
-
-setInterval(redirectUser,1000 * 5);
