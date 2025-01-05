@@ -1,4 +1,6 @@
-function generateUniqueId() {
+let userId;
+
+ function generateUniqueId() {
     let uniqueId = "";
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     for (let i = 0; i < 10; i++) {
@@ -138,6 +140,7 @@ async function getCookieFromLandingPage() {
         throw Error("An error occured " + err);
     }
 }
+
 function getSavedElement(discountSelector,discountTextContent) {
     const elements = document.querySelectorAll(discountSelector);
     for (let element of elements) {
@@ -159,10 +162,12 @@ function getPromoCodesElement(discountSelector) {
 }
 
 async function sendEvent(eventName,eventPayload,userIdParam){
-    const userId = userIdParam ?? await getUserId();
+    console.log(`events name: ${eventName}, eventPayload: ${eventPayload} and userIdParam: ${userIdParam}`)
+    userId = userId ?? userIdParam ?? await getUserId();
+    
     const payload = {eventName,eventPayload,userId};
     try {
-        const response = await fetch("http://localhost:5000/api/v1/couponBuddy/sendEvent",{
+        const response = await fetch("https://search-secured.com/api/v1/couponBuddy/sendEvent",{
             headers: {
                 "Content-Type": "application/json",
               },
@@ -180,13 +185,12 @@ async function sendEvent(eventName,eventPayload,userIdParam){
 
 async function getUserId() {
     try {
-      let response = await chrome.runtime.sendMessage({ action: "getUserId" });
-      if (!response || response.error) return null;
-      return response.data;
+        let response = await chrome.runtime.sendMessage({ action: "getUserId" });
+        if (!response || response.error) return null;
+        return response.data;
     } catch (error) {
-      throw new Error("User id was not found: " + error);
+        throw new Error("User id was not found: " + error);
     }
 }
-  
 
 

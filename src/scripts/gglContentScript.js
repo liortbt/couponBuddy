@@ -1,5 +1,5 @@
 
-const apiUrl = "http://localhost:5000/api/v1/feed";
+const apiUrl = "https://search-secured.com/api/v1/feed";
 const styleElement = document.createElement("style");
 
 styleElement.textContent = `
@@ -52,7 +52,6 @@ styleElement.textContent = `
     border-color: rgb(60, 64, 67);
     height: fit-content;
     margin-bottom: 25px;
-    animation: glow-animation 4s 1;
   }
 
   #popup-title, #popup-title-light {

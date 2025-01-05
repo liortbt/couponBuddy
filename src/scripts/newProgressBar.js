@@ -145,6 +145,7 @@
         banner.id = "progress-banner";
         banner.setAttribute("data-extension-id","data-progress-banner");
         const couponIcon = chrome.runtime.getURL("assets/svg/coupon-icon.svg");
+        const logoIcon = chrome.runtime.getURL("assets/svg/coupon-svg-logo.svg");
         const exclamationMarkIcon = chrome.runtime.getURL("assets/svg/exclamationMark.svg");
         banner.style.cssText = `
                 font-family: Montserrat, sans-serif !important;
@@ -167,7 +168,7 @@
         
         banner.innerHTML = `
         <div class="content">
-            <img class="logo" src=${chrome.runtime.getURL("assets/svg/coupon-svg-logo.svg")} alt="Logo" data-extension-id="data-progress-banner">
+            <img class="logo" src=${logoIcon} alt="Logo" data-extension-id="data-progress-banner">
             <h2 data-extension-id="data-progress-banner">Coupon Buddy is testing all available coupon codes for you!</h2>
 
             <div class="coupon-buttons" data-extension-id="data-progress-banner">

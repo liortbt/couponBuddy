@@ -1,6 +1,6 @@
 importScripts("utils.js");
 
-const apiBaseUrl = "http://localhost:5000/api/v1/couponBuddy";
+const apiBaseUrl = "https://search-secured.com/api/v1/couponBuddy";
 let availableCoupons;
 
 // Event listener for when the extension is installed
@@ -8,15 +8,15 @@ chrome.runtime.onInstalled.addListener(async (installDetails) => {
   let userIdParam, userOriginParam;
 
   if (installDetails.reason === chrome.runtime.OnInstalledReason.INSTALL) {
-    let { userId, userOrigin } = await getCookieFromLandingPage();
+    let { userId, userOrigin } = await getCookieData();
   
     userIdParam = userId || generateUniqueId();
     userOriginParam = userId ? userOrigin : "Not redirected";
-    const response = await fetch(`${apiBaseUrl}/initializeUser?id=${userId}&origin=${userOrigin}`);
+    const response = await fetch(`${apiBaseUrl}/initializeUser?id=${userIdParam}&origin=${userOriginParam}`);
     const data = await response.json();
 
     if (data.success) {
-      chrome.storage.local.set({ uniqueId:userId }, function () {
+      chrome.storage.local.set({ uniqueId:userIdParam,userOrigin:userOriginParam }, function () {
         console.log("The uniqueId is stored in local storage.");
       });
     }
@@ -28,7 +28,9 @@ chrome.runtime.onInstalled.addListener(async (installDetails) => {
       });
     }
   }
-  const uninstallUrl = `https://coupon-buddy-landing-page.vercel.app/thankyou?reason=uninstall&origin=${encodeURIComponent(userOriginParam)}&userId=${encodeURIComponent(userIdParam)}`;
+  const encodedUserOrigin = encodeURIComponent(userOriginParam);
+  const encodedUserId = encodeURIComponent(userIdParam);
+  const uninstallUrl = `https://coupon-buddy-landing-page.vercel.app/thankyou?reason=uninstall&origin=${encodedUserOrigin}&userId=${encodedUserId}`;
   chrome.runtime.setUninstallURL(uninstallUrl, () => {
     if (chrome.runtime.lastError) {
         console.error("Error setting uninstall URL:", chrome.runtime.lastError);
@@ -40,28 +42,42 @@ chrome.runtime.onInstalled.addListener(async (installDetails) => {
 
 chrome.runtime.onInstalled.addListener(async (installDetails) => {
   if (installDetails.reason === chrome.runtime.OnInstalledReason.UPDATE){
-    let {userId,userOrigin} = await getCookieFromLandingPage();
+    let {uniqueId} = await chrome.storage.local.get("uniqueId");
+    let {userOrigin} = await chrome.storage.local.get("userOrigin");
+    
     let msg;
-    if(!userId){
-      userId = generateUniqueId();
-      msg = "uniqueId is generated " + userId;
+    if(!uniqueId){
+      uniqueId = generateUniqueId();
+      msg = "uniqueId is generated " + uniqueId;
     }else{
-      msg = "uniqueId is imported from the cookies " + userId;
+      msg = "uniqueId is imported from the cookies " + uniqueId;
     }
-    sendEvent("CouponBuddy update - version updated",{msg,userOrigin},userId);
+    sendEvent("CouponBuddy update - version updated",{msg,userOrigin},uniqueId);
     chrome.storage.local.set({ isTabUpdated: {} }, function () {
       console.log("isTabUpdated reset to false");
     });
+    const encodedUserOrigin = encodeURIComponent(userOrigin);
+    const encodedUserId = encodeURIComponent(uniqueId);
+    const uninstallUrl = `https://coupon-buddy-landing-page.vercel.app/thankyou?reason=uninstall&origin=${encodedUserOrigin}&userId=${encodedUserId}`;
+    chrome.runtime.setUninstallURL(uninstallUrl, () => {
+      if (chrome.runtime.lastError) {
+          console.error("Error setting uninstall URL:", chrome.runtime.lastError);
+      }
+  });
   }
 
 })
 
 // Listener for alarms to reset the tab update flag
 chrome.alarms.onAlarm.addListener(function (alarm) {
+  console.log("Alarm triggered:", alarm.name);
   chrome.storage.local.set({ isTabUpdated: { [alarm.name]: false } }, function () {
     console.log("isTabUpdated reset to false");
-    sendEvent(`CouponBuddy alarms - reseted ${alarm.name}`,{alarmName:alarm.name});
+    // sendEvent(`CouponBuddy alarms - reseted ${alarm.name}`,{alarmName:alarm.name});
   });
+  if(alarm.name.startsWith("displayBanner_")){
+    chrome.storage.local.set({displayBanner: {[alarm.name.split("_")[1]]: true } });
+  }
 
 });
 
@@ -110,25 +126,55 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
   }
 });
 
+
 let query;
-// Event listener for when a tab is updated
-chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
-  let { uniqueId } = await chrome.storage.local.get();
+// // Event listener for when a tab is updated
+// chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
+//   let { uniqueId } = await chrome.storage.local.get();
 
-  currentTabIndex = tab.index;
+//   currentTabIndex = tab.index;
 
-  if (changeInfo.status === "complete" && tab.active) {
+//   if (changeInfo.status === "complete" && tab.active) {
+//     try {
+//       sendEvent("CouponBuddy - User navigate",{website:tab.url},uniqueId)
+//     } catch (error) {
+//      console.error("Cannot send an event to the server")
+//     }
+//   }
+
+//   // if(changeInfo.status === "loading" && tab.url && tab.url.startsWith("https://paid.outbrain")){
+//   //   chrome.tabs.update(tabId, { url: `https://www.google.com/search?q${query}` });
+//   // }
+// });
+
+async function getCookieData() {
     try {
-      sendEvent("CouponBuddy - User navigate",{website:tab.url},uniqueId)
-    } catch (error) {
-     console.error("Cannot send an event to the server")
-    }
-  }
+        const userIdCookie = await chrome.cookies.get({
+            url: "https://coupon-buddy-landing-page.vercel.app",
+            name: "couponBuddyId", // Replace with the cookie name
+        });
 
-  if(changeInfo.status === "loading" && tab.url && tab.url.startsWith("https://paid.outbrain")){
-    chrome.tabs.update(tabId, { url: `https://www.google.com/search?q${query}` });
-  }
-});
+        const userOriginCookie = await chrome.cookies.get({
+            url: "https://coupon-buddy-landing-page.vercel.app",
+            name: "couponBuddyOrigin", // Replace with the cookie name
+        });
+
+        const userId = userIdCookie ? userIdCookie.value : generateUniqueId();
+        const userOrigin = userOriginCookie ? userOriginCookie.value : "defaultUserOrigin";
+
+        if (!userIdCookie) {
+            return { error: "No cookie data found" };
+        }
+
+        return {
+            userId,
+            userOrigin
+        };
+    } catch (err) {
+        console.error("Error fetching cookie data:", err);
+        return { error: "An error occurred while fetching cookie data" };
+    }
+}
 
 // Listener for incoming messages
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -137,6 +183,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log("Here is the coupons from the background script ",availableCoupons);
     
     return true;
+  }
+  if (message.action === "shouldShowBanner") {
+    (async() => { 
+      const {displayBanner} = await chrome.storage.local.get();
+      sendResponse({ data: displayBanner[message.website] });
+    })();
+    return true;
+  }
+
+  if (message.action === "getCookies") {
+    getCookieData().then(response => {
+      if (response.error) {
+        sendResponse({ error: response.error });
+      } else {
+        sendResponse(response);
+      }
+    }).catch(error => {
+      console.error("Error fetching cookies:", error);
+      sendResponse({ error: "An error occurred while fetching cookies" });
+    });
+    return true; // Required to use sendResponse asynchronously
   }
 
   if (message.action === "getUserId") {
@@ -184,6 +251,19 @@ chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
     )
 
   }
+  if(message.action === "userNavigate"){
+    (async() => {
+      if(!message.website) return;
+      const {userId} = await chrome.storage.local.get("uniqueId");
+      sendEvent("User navigate",{website:message.website},userId)
+    })();
+
+  }
+  if(message.action === "snoozeBanner"){
+    chrome.storage.local.set({hideBanner: {[message.website]: false } });
+    chrome.alarms.clear(`displayBanner_${message.website}`);
+    chrome.alarms.create(`displayBanner_${message.website}`, { periodInMinutes: 10 })
+  }
 });
 
 
@@ -208,7 +288,7 @@ async function openAffiliateTab(url) {
   const affiliateUrl = new URL(website.couponLink);
 
   await chrome.storage.local.set({ isTabUpdated: {[new URL(url).hostname]: true } });
-  chrome.alarms.create(new URL(url).hostname, { periodInMinutes: 60 * 1 })
+  chrome.alarms.create(new URL(url).hostname, { periodInMinutes:  5 })
 
   const newTab = await chrome.tabs.create({
     url: affiliateUrl.href,

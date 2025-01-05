@@ -2,33 +2,45 @@
 import { defineConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
+
 export default defineConfig({
   plugins: [
     viteStaticCopy({
       targets: [
         { src: "src/assets/images/*", dest: "assets/images" },
-        {src:"public/manifest.json",dest:"."}
+        { src: "src/assets/svg/*", dest: "assets/svg" },
 
-        // Specify additional files or patterns as needed
+
       ],
       hook: "writeBundle", // Ensures the assets are copied after the bundle is written
     }),
   ],
   build: {
+    outDir: 'dist',
     rollupOptions: {
       input: {
-        utils:"src/utils.js",
-        background: "src/background.js",
-        initalBanner:"src/scripts/initalBanner.js",
-        progressBar:"src/scripts/progressBar.js",
-        finalBanner:"src/scripts/finalBanner.js",
-        gglContentScript: "src/scripts/gglContentScript.js", // Add the new script file here
-        userNavigate:"src/scripts/userNavigate.js",
-        banner:"src/scripts/banner.js"
+        utils: "src/utils.js",
+        background: "src/background.js", 
+        initalBanner: "src/scripts/newBanner.js",
+        progressBar: "src/scripts/newProgressBar.js",
+        finalBanner: "src/scripts/finalBanner.js",
+        gglContentScript: "src/scripts/gglContentScript.js",
+        userNavigate: "src/scripts/userNavigate.js",
+        banner: "src/scripts/banner.js",
       },
       output: {
-        entryFileNames: `[name].bundle.js`, // Use [name] placeholder to generate dynamic bundle names
+        entryFileNames: `[name].bundle.js`,
+        dir: 'dist',
+        assetFileNames: `[name].[ext]`
       },
+      treeshake: {
+        moduleSideEffects: (id) => {
+          if (id.includes('utils.js')) {
+            return 'no-treeshake';
+          }
+          return true;
+        }
+      }
     },
   },
 });
